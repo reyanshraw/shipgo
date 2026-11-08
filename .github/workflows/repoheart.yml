@@ -1,0 +1,16 @@
+repoheart:
+  provider:
+    name: openai
+    model: gpt-4o
+
+  agents:
+    ci_repair: true
+    pr_review: false
+    issue_triage: false
+    duplicate_detection: false
+    issue_resolution: false
+    code_quality: false
+    security: false
+    conflict_resolution: false
+    test: false
+    documentation: false
