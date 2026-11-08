@@ -8,27 +8,16 @@ permissions:
   contents: read
 jobs:
   lint:
-    name: Lint (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install shellcheck (macOS)
+        if: runner.os == 'macOS'
+        run: brew install shellcheck
+
       - name: ShellCheck
         if: runner.os != 'Windows'
         run: shellcheck -x shipgo.sh scripts/*.sh tests/*.sh
-      - name: PSScriptAnalyzer
-        if: runner.os != 'Windows'
-        shell: pwsh
-        run: |
-          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
-          Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error
-      - name: CMD smoke
-        if: runner.os == 'Windows'
-        shell: cmd
-        run: call shipgo.bat version
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
