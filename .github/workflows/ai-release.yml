@@ -1,17 +1,45 @@
 name: AI Release
+
 on:
-  push: { branches: [main] }
+  push:
+    branches: [main]
+
 permissions:
   contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   release:
+    name: Semantic Release
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-- name: Semantic release
-  uses: cycjimmy/semantic-release-action@v4
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  with:
-    skip_npm_plugin: true
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Semantic release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          skip_npm_plugin: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create issue on release failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `AI Release failed on ${context.sha.substring(0, 7)}`;
+            const body = `The semantic-release step failed.\n\n` +
+                         `Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['ci', 'release-failure']
+            });
