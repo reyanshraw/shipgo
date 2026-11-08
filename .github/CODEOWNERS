@@ -1,0 +1,6 @@
+*                   @ORG/maintainers
+/shipgo.sh          @ORG/core
+/shipgo.ps1         @ORG/core
+/.github/           @ORG/devops
+/docs/              @ORG/docs
+/scripts/           @ORG/release

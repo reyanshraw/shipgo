@@ -1,0 +1,14 @@
+{
+  "version": "@VERSION@",
+  "description": "Cross-platform Git push tool",
+  "homepage": "https://github.com/ORG/shipgo",
+  "license": "MIT",
+  "url": "https://github.com/ORG/shipgo/archive/refs/tags/v@VERSION@.zip",
+  "hash": "<filled-by-release>",
+  "extract_dir": "shipgo-@VERSION@",
+  "bin": "shipgo.bat",
+  "checkver": { "github": "https://github.com/ORG/shipgo" },
+  "autoupdate": {
+    "url": "https://github.com/ORG/shipgo/archive/refs/tags/v$version.zip"
+  }
+}

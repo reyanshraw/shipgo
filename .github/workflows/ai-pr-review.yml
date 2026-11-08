@@ -1,0 +1,21 @@
+name: AI PR Review
+on:
+  pull_request: { types: [opened, synchronize, reopened] }
+permissions:
+  pull-requests: write
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: OpenAgentHQ/repoheart@main
+        with:
+          config: |
+            agents:
+              pr_review: true
+              code_quality: true
+              security: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -1,0 +1,19 @@
+```text
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# Editor
+.idea/
+.vscode/
+*.sublime-*
+
+# Logs
+*.log
+dist/
+release/
+
+# Local config
+.shipgorc
+.env

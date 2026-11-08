@@ -1,0 +1,24 @@
+name: AI Triage
+on:
+  issues: { types: [opened, edited] }
+  pull_request: { types: [opened, synchronize] }
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@v1
+        with:
+          mode: automation
+          prompt: |
+            Read .github/repo-policy.md and the event context.
+            Classify this issue/PR: kind (bug/feature/ux/docs),
+            risk (low/high), duplicate?
+            Apply the matching labels. Do not write code.
+          allowed_tools: "Read, Write, Bash(gh issue view:*), Bash(gh pr view:*)"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

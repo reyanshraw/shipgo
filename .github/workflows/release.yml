@@ -1,0 +1,24 @@
+name: Release
+on:
+  push:
+    tags: ['v*.*.*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Semantic release
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build dist manifests
+        run: |
+          chmod +x scripts/dist-manifests.sh
+          ./scripts/dist-manifests.sh "$GITHUB_REF_NAME" SHA256SUMS dist/
+      - name: Publish Homebrew + Scoop
+        run: |
+          gh release upload "$GITHUB_REF_NAME" dist/homebrew/shipgo.rb
+          gh release upload "$GITHUB_REF_NAME" dist/scoop/shipgo.json

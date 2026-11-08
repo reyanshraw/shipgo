@@ -1,0 +1,24 @@
+name: AI Implementation
+on:
+  issues: { types: [labeled] }
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+jobs:
+  implement:
+    if: github.event.label.name == 'state:planned'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: anthropics/claude-code-action@v1
+        with:
+          mode: automation
+          prompt: |
+            Read .github/repo-policy.md and issue #${{ github.event.issue.number }}.
+            Implement a minimal, tested fix on branch bot/${{ github.event.issue.number }}-<slug>.
+            Open a PR against main. Do not merge.
+          allowed_tools: "Read, Write, Edit, Bash(gh pr create:*), Bash(git:*)"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

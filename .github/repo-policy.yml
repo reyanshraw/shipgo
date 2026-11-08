@@ -1,0 +1,6 @@
+merge_strategy: squash
+ci_workflow_name: "CI"
+release_branch: main
+labels:
+  ready: "state:ready-to-merge"
+  high_risk: "risk:high"

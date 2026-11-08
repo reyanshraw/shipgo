@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>shipgo — The Professional Git Push Tool</title>
+    <meta name="description" content="A cross-platform Git push tool. Safe, scriptable, and agent-friendly. One command to sync, tag, and deploy.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                        },
+                        surface: '#0a0a0a',
+                        card: '#111111',
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'typing': 'typing 3.5s steps(40, end)',
+                        'blink': 'blink .75s step-end infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        typing: {
+                            'from': { width: '0' },
+                            'to': { width: '100%' },
+                        },
+                        blink: {
+                            'from, to': { borderColor: 'transparent' },
+                            '50%': { borderColor: '#22d3ee' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0a0a; color: #ededed; overflow-x: hidden; }
+        .glass { background: rgba(17, 17, 17, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glow-text { background: linear-gradient(135deg, #c084fc, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glow-border { position: relative; }
+        .glow-border::before {
+            content: ""; position: absolute; inset: -1px; border-radius: inherit;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.5), rgba(34, 211, 238, 0.5));
+            z-index: -1; opacity: 0; transition: opacity 0.3s;
+        }
+        .glow-border:hover::before { opacity: 1; }
+        .grid-bg {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black, transparent 80%);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-500 selection:text-white font-sans" x-data="{ mobileMenu: false, os: 'mac', copied: false }">
+
+    <!-- Background Grid -->
+    <div class="fixed inset-0 grid-bg pointer-events-none z-0"></div>
+
+    <!-- Animated Glow Orbs -->
+    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-brand-500/20 rounded-full blur-[120px] pointer-events-none z-0 animate-blob"></div>
+    <div class="fixed top-40 right-1/4 w-[400px] h-[400px] bg-cyan-400/10 rounded-full blur-[100px] pointer-events-none z-0 animate-blob" style="animation-delay: 2s;"></div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-50 border-b border-white/5 glass">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="window.scrollTo(0,0)">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center font-bold text-white shadow-lg shadow-brand-500/20">s</div>
+                <span class="text-lg font-bold tracking-tight">shipgo</span>
+                <span class="hidden sm:inline-block text-[10px] font-mono bg-white/10 text-gray-300 px-2 py-0.5 rounded-full border border-white/10">v1.0.0</span>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
+                <a href="#features" class="hover:text-white transition">Features</a>
+                <a href="#commands" class="hover:text-white transition">Commands</a>
+                <a href="#install" class="hover:text-white transition">Install</a>
+                <div class="w-px h-4 bg-white/20"></div>
+                <a href="https://github.com/ORG/shipgo" target="_blank" class="hover:text-white transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+                    <span class="bg-white/10 px-2 py-1 rounded-md text-xs border border-white/10 hover:bg-white/20 transition">Star</span>
+                </a>
+            </div>
+
+            <button @click="mobileMenu = !mobileMenu" class="md:hidden text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div x-show="mobileMenu" x-transition class="md:hidden glass border-t border-white/5 px-6 py-4 space-y-4">
+            <a href="#features" @click="mobileMenu = false" class="block text-gray-400 hover:text-white">Features</a>
+            <a href="#commands" @click="mobileMenu = false" class="block text-gray-400 hover:text-white">Commands</a>
+            <a href="#install" @click="mobileMenu = false" class="block text-gray-400 hover:text-white">Install</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative pt-40 pb-24 px-6 max-w-5xl mx-auto text-center z-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 mb-8 animate-fade-in">
+            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+            v1.0.0 is now live
+        </div>
+        
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 animate-fade-in" style="animation-delay: 0.1s;">
+            Ship code,<br><span class="glow-text">not foot-guns.</span>
+        </h1>
+        
+        <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto animate-fade-in" style="animation-delay: 0.2s;">
+            The professional, cross-platform Git push tool. Built for humans and AI agents. Safe by default, scriptable everywhere.
+        </p>
+
+        <div class="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in" style="animation-delay: 0.3s;">
+            <a href="#install" class="bg-white text-black font-semibold px-8 py-3 rounded-lg hover:bg-gray-200 transition shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                Get Started
+            </a>
+            <a href="https://github.com/ORG/shipgo" class="glass text-white font-semibold px-8 py-3 rounded-lg hover:bg-white/10 transition flex items-center justify-center gap-2">
+                Read the Docs
+            </a>
+        </div>
+
+        <!-- Terminal Mockup -->
+        <div class="mt-20 relative max-w-3xl mx-auto rounded-xl glass glow-border p-1 animate-fade-in" style="animation-delay: 0.4s;">
+            <div class="bg-[#000000] rounded-lg overflow-hidden flex flex-col h-[380px]">
+                <div class="bg-[#111] px-4 py-3 flex items-center border-b border-white/10">
+                    <div class="flex gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                    </div>
+                    <div class="mx-auto text-xs font-mono text-gray-500">shipgo — bash</div>
+                </div>
+                <div class="p-6 text-left font-mono text-sm overflow-y-auto">
+                    <div class="flex gap-2 mb-3">
+                        <span class="text-green-400">➜</span>
+                        <span class="text-cyan-400">~/projects/app</span>
+                        <span class="text-gray-300">shipgo status</span>
+                    </div>
+                    <div class="text-gray-400 mb-1">[*] Branch: <span class="text-white">feature/oauth</span></div>
+                    <div class="text-gray-400 mb-1">[*] Upstream: <span class="text-white">origin/feature/oauth</span></div>
+                    <div class="text-gray-400 mb-6">[*] Ahead: <span class="text-green-400">3</span> | Behind: <span class="text-red-400">0</span></div>
+                    
+                    <div class="flex gap-2 mb-3">
+                        <span class="text-green-400">➜</span>
+                        <span class="text-cyan-400">~/projects/app</span>
+                        <span class="text-gray-300">shipgo sync</span>
+                    </div>
+                    <div class="text-gray-400 mb-1">[*] Fetching all remotes...</div>
+                    <div class="text-gray-400 mb-1">[*] Pulling with rebase...</div>
+                    <div class="text-cyan-400 mb-1">[OK] Rebase successful.</div>
+                    <div class="text-green-400 mb-6">[OK] Push complete.</div>
+
+                    <div class="flex gap-2">
+                        <span class="text-green-400">➜</span>
+                        <span class="text-cyan-400">~/projects/app</span>
+                        <span class="text-gray-300 border-r-2 border-transparent animate-typing overflow-hidden whitespace-nowrap inline-block" style="animation: typing 2s steps(20, end), blink .75s step-end infinite;">shipgo pr "Add OAuth"</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Grid -->
+    <section id="features" class="py-24 px-6 relative z-10 border-t border-white/5 bg-black/40">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Built for modern workflows.</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Stop memorizing 50 git aliases. `shipgo` gives you safe, standard commands that work identically across every OS and CI pipeline.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Feature 1 -->
+                <div class="glass p-6 rounded-2xl hover:bg-white/5 transition duration-300 group">
+                    <div class="w-12 h-12 rounded-lg bg-brand-500/20 flex items-center justify-center text-brand-400 mb-4 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Safe by Default</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Never accidentally overwrite remote history. `shipgo` enforces <code class="text-brand-400 bg-brand-500/10 px-1 rounded">--force-with-lease</code> under the hood.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="glass p-6 rounded-2xl hover:bg-white/5 transition duration-300 group">
+                    <div class="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-4 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Cross-Platform</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Native support for Bash, Windows CMD, and PowerShell. Write your CI scripts once, run them anywhere.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass p-6 rounded-2xl hover:bg-white/5 transition duration-300 group">
+                    <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">PR Automation</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Push your branch and open a GitHub PR or GitLab MR instantly. Draft PRs are just one flag away.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="glass p-6 rounded-2xl hover:bg-white/5 transition duration-300 group">
+                    <div class="w-12 h-12 rounded-lg bg-pink-500/20 flex items-center justify-center text-pink-400 mb-4 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Agent-Ready</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Ships with <code class="text-gray-300 bg-white/5 px-1 rounded">AGENTS.md</code>, repo policies, and AI workflow guards out of the box. Perfect for Claude Code or Cursor.</p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="glass p-6 rounded-2xl hover:bg-white/5 transition duration-300 group">
+                    <div class="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400 mb-4 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">One-Shot Sync</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Fetch, rebase with autostash, and push your changes in a single, bulletproof command.</p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="glass p-6 rounded-2xl hover:bg-white/5 transition duration-300 group">
+                    <div class="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-400 mb-4 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Release Engine</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Create annotated SemVer tags and push them instantly. Perfect for automated release pipelines.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Command Explorer -->
+    <section id="commands" class="py-24 px-6 relative z-10">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Every command you need.</h2>
+                <p class="text-gray-400">Type <code class="text-white bg-white/10 px-2 py-1 rounded">shipgo</code> in your terminal to launch the interactive menu.</p>
+            </div>
+
+            <div class="glass rounded-2xl overflow-hidden" x-data="{ tab: 'core' }">
+                <!-- Tabs -->
+                <div class="flex border-b border-white/10 overflow-x-auto">
+                    <button @click="tab = 'core'" :class="{'text-white border-b-2 border-brand-500 bg-white/5': tab === 'core', 'text-gray-400 hover:text-white': tab !== 'core'}" class="px-6 py-4 text-sm font-medium transition">Core</button>
+                    <button @click="tab = 'sync'" :class="{'text-white border-b-2 border-brand-500 bg-white/5': tab === 'sync', 'text-gray-400 hover:text-white': tab !== 'sync'}" class="px-6 py-4 text-sm font-medium transition">Sync & Advanced</button>
+                    <button @click="tab = 'pr'" :class="{'text-white border-b-2 border-brand-500 bg-white/5': tab === 'pr', 'text-gray-400 hover:text-white': tab !== 'pr'}" class="px-6 py-4 text-sm font-medium transition">PR / MR</button>
+                    <button @click="tab = 'info'" :class="{'text-white border-b-2 border-brand-500 bg-white/5': tab === 'info', 'text-gray-400 hover:text-white': tab !== 'info'}" class="px-6 py-4 text-sm font-medium transition">Info</button>
+                </div>
+
+                <!-- Content -->
+                <div class="p-6 md:p-8 font-mono text-sm">
+                    <!-- Core -->
+                    <div x-show="tab === 'core'" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><span class="text-brand-400">shipgo push</span> <span class="text-gray-500 text-xs ml-2">Push current</span></div>
+                            <div><span class="text-brand-400">shipgo up</span> <span class="text-gray-500 text-xs ml-2">Set upstream</span></div>
+                            <div><span class="text-brand-400">shipgo all</span> <span class="text-gray-500 text-xs ml-2">Push all branches</span></div>
+                            <div><span class="text-brand-400">shipgo tags</span> <span class="text-gray-500 text-xs ml-2">Push tags</span></div>
+                            <div><span class="text-brand-400">shipgo force</span> <span class="text-gray-500 text-xs ml-2">Safe force push</span></div>
+                            <div><span class="text-brand-400">shipgo del &lt;br&gt;</span> <span class="text-gray-500 text-xs ml-2">Delete remote branch</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sync -->
+                    <div x-show="tab === 'sync'" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><span class="text-brand-400">shipgo sync</span> <span class="text-gray-500 text-xs ml-2">Fetch + Pull + Push</span></div>
+                            <div><span class="text-brand-400">shipgo pull</span> <span class="text-gray-500 text-xs ml-2">Rebase + Autostash</span></div>
+                            <div><span class="text-brand-400">shipgo amend</span> <span class="text-gray-500 text-xs ml-2">Amend + Force push</span></div>
+                            <div><span class="text-brand-400">shipgo cleanup</span> <span class="text-gray-500 text-xs ml-2">Delete merged local</span></div>
+                        </div>
+                    </div>
+
+                    <!-- PR -->
+                    <div x-show="tab === 'pr'" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><span class="text-brand-400">shipgo pr "Title"</span> <span class="text-gray-500 text-xs ml-2">GitHub PR</span></div>
+                            <div><span class="text-brand-400">shipgo draft-pr</span> <span class="text-gray-500 text-xs ml-2">Draft PR</span></div>
+                            <div><span class="text-brand-400">shipgo mr "Title"</span> <span class="text-gray-500 text-xs ml-2">GitLab MR</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Info -->
+                    <div x-show="tab === 'info'" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><span class="text-brand-400">shipgo status</span> <span class="text-gray-500 text-xs ml-2">Branch + Diff</span></div>
+                            <div><span class="text-brand-400">shipgo doctor</span> <span class="text-gray-500 text-xs ml-2">Env health check</span></div>
+                            <div><span class="text-brand-400">shipgo whoami</span> <span class="text-gray-500 text-xs ml-2">Git identity</span></div>
+                            <div><span class="text-brand-400">shipgo ping</span> <span class="text-gray-500 text-xs ml-2">Test connection</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Install Section -->
+    <section id="install" class="py-24 px-6 relative z-10 bg-black/60 border-t border-white/5">
+        <div class="max-w-3xl mx-auto text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to ship?</h2>
+            <p class="text-gray-400 mb-10">Install via your favorite package manager, or drop the script directly into your PATH.</p>
+
+            <!-- OS Selector -->
+            <div class="flex justify-center gap-2 mb-8">
+                <button @click="os = 'mac'" :class="os === 'mac' ? 'bg-white text-black' : 'glass text-gray-400 hover:text-white'" class="px-6 py-2 rounded-lg text-sm font-medium transition">macOS / Linux</button>
+                <button @click="os = 'win'" :class="os === 'win' ? 'bg-white text-black' : 'glass text-gray-400 hover:text-white'" class="px-6 py-2 rounded-lg text-sm font-medium transition">Windows</button>
+            </div>
+
+            <!-- Code Blocks -->
+            <div class="glass rounded-xl p-1 text-left relative group" @click="navigator.clipboard.writeText(os === 'mac' ? 'brew install ORG/tap/shipgo' : 'scoop install shipgo'); copied = true; setTimeout(() => copied = false, 2000)">
+                <div class="bg-[#050505] rounded-lg p-5 flex items-center justify-between border border-white/5">
+                    <div class="font-mono text-sm md:text-base">
+                        <span class="text-gray-500 select-none" x-show="os === 'mac'">$ </span>
+                        <span class="text-gray-500 select-none" x-show="os === 'win'">> </span>
+                        <span x-show="os === 'mac'" class="text-white">brew install <span class="text-brand-400">ORG/tap/shipgo</span></span>
+                        <span x-show="os === 'win'" class="text-white">scoop install <span class="text-brand-400">shipgo</span></span>
+                    </div>
+                    <div class="text-gray-500 hover:text-white transition">
+                        <svg x-show="!copied" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <svg x-show="copied" class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-12 text-center text-sm text-gray-500 relative z-10">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded bg-white/10 flex items-center justify-center font-bold text-xs text-white">s</div>
+                <span class="font-semibold text-gray-300">shipgo</span>
+            </div>
+            <p>Released under the MIT License.</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-white transition">Twitter</a>
+                <a href="#" class="hover:text-white transition">GitHub</a>
+                <a href="#" class="hover:text-white transition">Docs</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
