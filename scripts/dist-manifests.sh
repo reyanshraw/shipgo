@@ -2,6 +2,7 @@
 set -euo pipefail
 
 DIR="${1:-}"
+# shellcheck disable=SC2034
 SUMS="${2:-}"
 
 if [ -z "$DIR" ] || [ -z "$SUMS" ]; then
@@ -15,10 +16,11 @@ if [ ! -d "$DIR" ]; then
   exit 1
 fi
 
-echo "Generating manifest for files in $DIR..."
-
 cd "$DIR"
 
-find . -type f ! -name "$(basename "$SUMS")" -print0 | sort -z | xargs -0 sha256sum > "$SUMS"
+# SC2094 Fix: Write to a temp file first, then move it to prevent reading/writing the same file
+TMP_SUMS=$(mktemp)
+find . -type f ! -name "$(basename "$SUMS")" -print0 | sort -z | xargs -0 sha256sum > "$TMP_SUMS"
+mv "$TMP_SUMS" "$SUMS"
 
 echo "Manifest successfully written to $DIR/$SUMS"
