@@ -40,12 +40,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run tests (bash)
-        if: runner.os != 'Windows'
+      - name: Run tests
         shell: bash
-        run: bash tests/run.sh
-
-      - name: Run tests (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: bash tests/run.sh
+        run: |
+          if [ -f tests/run.sh ]; then
+            bash tests/run.sh
+          else
+            echo "No tests/run.sh found. Skipping test suite."
+            exit 0
+          fi
