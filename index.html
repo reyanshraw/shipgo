@@ -1,376 +1,431 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>shipgo — Git Push, Perfected</title>
-    <meta name="description" content="A powerful, interactive CLI for pushing code, managing PRs, and syncing repositories effortlessly.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0d1117;
-            --bg-card: #161b22;
-            --border: #30363d;
-            --text: #c9d1d9;
-            --text-muted: #8b949e;
-            --accent: #58a6ff;
-            --accent-green: #3fb950;
-            --accent-purple: #bc8cff;
-            --font-sans: 'Inter', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shipgo — Git push, perfected.</title>
+  <meta name="description" content="A powerful CLI for pushing code, managing PRs, and syncing repositories without friction.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  <style>
+    :root {
+      --bg: #050505;
+      --bg-surface: #0f0f11;
+      --border: #222225;
+      --border-hover: #333338;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --accent: #10b981; /* Crisp emerald green */
+      --accent-glow: rgba(16, 185, 129, 0.15);
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: var(--font-sans);
-            line-height: 1.6;
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(88, 166, 255, 0.08), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(188, 140, 255, 0.08), transparent 25%);
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
+    html {
+      scroll-behavior: smooth;
+    }
 
-        a:hover {
-            color: #79c0ff;
-        }
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.02) 0%, transparent 50%);
+    }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-        /* Nav */
-        nav {
-            padding: 24px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
 
-        .logo {
-            font-family: var(--font-mono);
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    /* Header */
+    header {
+      padding: 32px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid transparent;
+    }
 
-        .logo span {
-            color: var(--accent-green);
-        }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-        .nav-links {
-            display: flex;
-            gap: 24px;
-            font-size: 0.9rem;
-        }
+    .logo {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-        .nav-links a {
-            color: var(--text-muted);
-        }
+    .logo span {
+      color: var(--accent);
+    }
 
-        .nav-links a:hover {
-            color: var(--text);
-        }
+    .version-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
 
-        /* Hero */
-        .hero {
-            padding: 80px 0 60px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
 
-        .hero h1 {
-            font-size: 4rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            margin-bottom: 16px;
-            background: linear-gradient(135deg, #fff 0%, #8b949e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    .nav-links a {
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
 
-        .hero p {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin-bottom: 40px;
-        }
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
 
-        .hero-actions {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 60px;
-        }
+    .github-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      transition: border-color 0.2s;
+    }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.2s;
-            cursor: pointer;
-            border: 1px solid transparent;
-        }
+    .github-btn:hover {
+      border-color: var(--border-hover);
+    }
 
-        .btn-primary {
-            background: var(--accent);
-            color: #fff;
-            box-shadow: 0 0 15px rgba(88, 166, 255, 0.2);
-        }
+    /* Hero */
+    .hero {
+      padding: 100px 0 60px;
+      text-align: center;
+      animation: fadeUp 0.6s ease-out;
+    }
 
-        .btn-primary:hover {
-            background: #409eff;
-            box-shadow: 0 0 25px rgba(88, 166, 255, 0.4);
-            transform: translateY(-1px);
-        }
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-        .btn-secondary {
-            background: var(--bg-card);
-            color: var(--text);
-            border-color: var(--border);
-        }
+    .hero .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      max-width: 550px;
+      margin: 0 auto;
+    }
 
-        .btn-secondary:hover {
-            background: #21262d;
-            border-color: #8b949e;
-        }
+    /* Setup Section */
+    .setup-section {
+      padding: 20px 0 80px;
+      display: flex;
+      justify-content: center;
+      animation: fadeUp 0.6s ease-out 0.1s both;
+    }
 
-        /* Terminal */
-        .terminal {
-            width: 100%;
-            max-width: 700px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            text-align: left;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            overflow: hidden;
-        }
+    .terminal-block {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      max-width: 100%;
+    }
 
-        .terminal-header {
-            background: #21262d;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid var(--border);
-        }
+    .terminal-block:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    }
 
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-        .dot-red { background: #ff5f56; }
-        .dot-yellow { background: #ffbd2e; }
-        .dot-green { background: #27c93f; }
+    .terminal-block .prompt {
+      color: var(--accent);
+      user-select: none;
+    }
 
-        .terminal-body {
-            padding: 24px;
-            font-family: var(--font-mono);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            color: #e6edf3;
-        }
+    .terminal-block code {
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    
+    .terminal-block code::-webkit-scrollbar {
+      display: none;
+    }
 
-        .terminal-line {
-            margin-bottom: 8px;
-        }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
 
-        .prompt { color: var(--accent-green); }
-        .cmd { color: #fff; }
-        .info { color: var(--accent); }
-        .success { color: var(--accent-green); }
-        .text-muted { color: var(--text-muted); }
+    .copy-btn:hover {
+      background: #1a1a1d;
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+    }
 
-        /* Features */
-        .features {
-            padding: 80px 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-        }
+    /* Features */
+    .features-section {
+      padding: 60px 0 100px;
+      border-top: 1px solid var(--border);
+    }
 
-        .feature-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            transition: border-color 0.2s, transform 0.2s;
-        }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
 
-        .feature-card:hover {
-            border-color: #8b949e;
-            transform: translateY(-2px);
-        }
+    .feature-card {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background-color: var(--bg-surface);
+      transition: all 0.2s ease;
+      animation: fadeUp 0.6s ease-out both;
+    }
 
-        .feature-icon {
-            font-size: 1.5rem;
-            margin-bottom: 16px;
-        }
+    .feature-card:hover {
+      border-color: #333;
+      transform: translateY(-2px);
+    }
 
-        .feature-card h3 {
-            color: #fff;
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-        }
+    .feature-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
 
-        .feature-card p {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-        }
+    .feature-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
 
-        /* Install Section */
-        .install {
-            padding: 60px 0 100px;
-            text-align: center;
-        }
+    .feature-card p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
 
-        .install h2 {
-            font-size: 2rem;
-            color: #fff;
-            margin-bottom: 24px;
-        }
+    .feature-card code {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: #1a1a1d;
+      padding: 2px 4px;
+      border-radius: 4px;
+      color: var(--text-primary);
+    }
 
-        .code-block {
-            display: inline-flex;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 12px 24px;
-            font-family: var(--font-mono);
-            font-size: 1rem;
-            color: #fff;
-        }
+    /* Footer */
+    footer {
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        .code-block span {
-            color: var(--accent-green);
-            margin-right: 12px;
-        }
+    footer a {
+      color: var(--text-primary);
+      transition: color 0.2s;
+    }
 
-        footer {
-            padding: 40px 0;
-            border-top: 1px solid var(--border);
-            text-align: center;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
+    footer a:hover {
+      color: var(--accent);
+    }
 
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            .hero-actions { flex-direction: column; width: 100%; }
-            .btn { width: 100%; justify-content: center; }
-            .nav-links { display: none; }
-        }
-    </style>
+    /* Animations */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Staggered card loading */
+    .feature-card:nth-child(1) { animation-delay: 0.1s; }
+    .feature-card:nth-child(2) { animation-delay: 0.15s; }
+    .feature-card:nth-child(3) { animation-delay: 0.2s; }
+    .feature-card:nth-child(4) { animation-delay: 0.25s; }
+    .feature-card:nth-child(5) { animation-delay: 0.3s; }
+    .feature-card:nth-child(6) { animation-delay: 0.35s; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .terminal-block {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: left;
+      }
+      .copy-btn {
+        align-self: flex-start;
+        margin-top: 8px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <nav>
-            <div class="logo">
-                <span>❯</span> shipgo
-            </div>
-            <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#install">Install</a>
-                <a href="https://github.com/reyanshraw/shipgo">GitHub</a>
-            </div>
-        </nav>
 
-        <section class="hero">
-            <h1>Git push, perfected.</h1>
-            <p>The ultimate CLI wrapper for pushing code, managing PRs, syncing repositories, and handling tags. Zero friction, interactive interface.</p>
-            
-            <div class="hero-actions">
-                <a href="#install" class="btn btn-primary">Get Started</a>
-                <a href="https://github.com/reyanshraw/shipgo" class="btn btn-secondary">View on GitHub</a>
-            </div>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo-group">
+        <div class="logo"><span>❯</span> shipgo</div>
+        <div class="version-badge">v1.0.0</div>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="https://github.com/reyanshraw/shipgo" class="github-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </header>
 
-            <div class="terminal">
-                <div class="terminal-header">
-                    <div class="dot dot-red"></div>
-                    <div class="dot dot-yellow"></div>
-                    <div class="dot dot-green"></div>
-                </div>
-                <div class="terminal-body">
-                    <div class="terminal-line"><span class="prompt">~/project ❯</span> <span class="cmd">shipgo push</span></div>
-                    <div class="terminal-line"><span class="info">[*]</span> Pushing main -> origin/main (3 commits)</div>
-                    <div class="terminal-line"><span class="success">[OK]</span> Push complete.</div>
-                    <div class="terminal-line"><br></div>
-                    <div class="terminal-line"><span class="prompt">~/project ❯</span> <span class="cmd">shipgo pr</span></div>
-                    <div class="terminal-line"><span class="info">[*]</span> Creating pull request...</div>
-                    <div class="terminal-line"><span class="success">[OK]</span> Opened in browser.</div>
-                </div>
-            </div>
-        </section>
+    <!-- Hero -->
+    <section class="hero">
+      <h1>Git push, perfected.</h1>
+      <p class="subtitle">A CLI that handles upstreams, PRs, and safe force pushes so you can ship code without friction.</p>
+    </section>
 
-        <section id="features" class="features">
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>Smart Upstream</h3>
-                <p>Automatically detects missing upstreams and sets them on the fly. No more <code>git push --set-upstream</code>.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🛡️</div>
-                <h3>Safe Force Push</h3>
-                <p>Built-in protection for protected branches. Always defaults to <code>--force-with-lease</code> to prevent overwriting teammates' work.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🚀</div>
-                <h3>PR & MR Generation</h3>
-                <p>Seamlessly integrates with GitHub CLI and GitLab CLI to create pull requests or merge requests directly from the terminal.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎨</div>
-                <h3>Interactive Menu</h3>
-                <p>Just run <code>shipgo</code> with no arguments to get a beautiful, color-coded interactive menu for all commands.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔄</div>
-                <h3>One-Click Sync</h3>
-                <p>Fetch, pull with rebase, and push your changes in a single command with <code>shipgo sync</code>.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🏷️</div>
-                <h3>Release Management</h3>
-                <p>Create annotated tags, push them, and even delete remote tags with ease using the <code>tag</code> and <code>release</code> commands.</p>
-            </div>
-        </section>
+    <!-- Setup -->
+    <section class="setup-section">
+      <div class="terminal-block">
+        <div><span class="prompt">$</span> <code>curl -fsSL https://raw.githubusercontent.com/reyanshraw/shipgo/main/install.sh | bash</code></div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>
+    </section>
 
-        <section id="install" class="install">
-            <h2>Ready to ship?</h2>
-            <div class="code-block">
-                <span>$</span> curl -fsSL https://raw.githubusercontent.com/reyanshraw/shipgo/main/install.sh | bash
-            </div>
-        </section>
+    <!-- Features -->
+    <section id="features" class="features-section">
+      <div class="features-grid">
+        
+        <div class="feature-card">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          <h3>Smart Upstream</h3>
+          <p>Auto-detects missing upstreams and sets them on the fly. No more <code>--set-upstream</code>.</p>
+        </div>
+        
+        <div class="feature-card">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <h3>Safe Force Push</h3>
+          <p>Protected branches are respected. Uses <code>--force-with-lease</code> by default.</p>
+        </div>
+        
+        <div class="feature-card">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>
+          <h3>PR & MR Generation</h3>
+          <p>Creates pull requests or merge requests directly from the terminal via <code>gh</code> or <code>glab</code>.</p>
+        </div>
+        
+        <div class="feature-card">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <h3>Interactive Menu</h3>
+          <p>Run <code>shipgo</code> with no arguments for a beautiful, color-coded command menu.</p>
+        </div>
+        
+        <div class="feature-card">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <h3>One-Click Sync</h3>
+          <p>Fetch, pull with rebase, and push in a single command with <code>shipgo sync</code>.</p>
+        </div>
+        
+        <div class="feature-card">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          <h3>Release Management</h3>
+          <p>Create annotated tags, push them, and delete remote tags with <code>tag</code> and <code>release</code>.</p>
+        </div>
 
-        <footer>
-            <p>Built with ❤️ by <a href="https://github.com/reyanshraw">reyanshraw</a>. Available on <a href="https://github.com/reyanshraw/shipgo">GitHub</a>.</p>
-        </footer>
-    </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <span>Built by <a href="https://github.com/reyanshraw">reyanshraw</a></span>
+      <span><a href="https://github.com/reyanshraw/shipgo">View Source →</a></span>
+    </footer>
+  </div>
+
+  <script>
+    function copyText(btn) {
+      const code = btn.previousElementSibling.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const original = btn.innerText;
+        btn.innerText = 'Copied!';
+        btn.style.color = 'var(--accent)';
+        btn.style.borderColor = 'var(--accent)';
+        setTimeout(() => {
+          btn.innerText = original;
+          btn.style.color = '';
+          btn.style.borderColor = '';
+        }, 2000);
+      });
+    }
+  </script>
 </body>
 </html>
