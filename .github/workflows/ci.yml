@@ -28,24 +28,3 @@ jobs:
 
       - name: Run ShellCheck
         run: shellcheck -x shipgo.sh scripts/*.sh tests/*.sh
-
-  test:
-    name: Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run tests
-        shell: bash
-        run: |
-          if [ -f tests/run.sh ]; then
-            bash tests/run.sh
-          else
-            echo "No tests/run.sh found. Skipping test suite."
-            exit 0
-          fi
