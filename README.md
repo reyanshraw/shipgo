@@ -6,15 +6,33 @@
 [![OpenSSF Scorecard](https://github.com/reyanshraw/shipgo/actions/workflows/scorecard.yml/badge.svg)](https://github.com/reyanshraw/shipgo/actions/workflows/scorecard.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-shipgo helps you push, sync, tag, and open PRs without losing safety. It provides a Bash implementation for Unix-like systems, a PowerShell version for Windows, and a batch wrapper for CMD.
+shipgo is a cross-platform Git workflow helper built for safe, repeatable, and automation-friendly development. It helps you push, sync, tag, and manage pull requests without the unsafe defaults that often lead to accidental overwrites.
+
+It ships as:
+- a Bash script for macOS/Linux
+- a PowerShell script for Windows
+- a batch wrapper for CMD
+
+This makes shipgo useful for everyday developer workflows, CI automation, and AI-assisted coding environments.
+
+## Why shipgo?
+
+Git is powerful, but many common actions are repetitive and easy to get wrong. shipgo simplifies the workflow while keeping safety in mind:
+
+- safer push behavior by default
+- force pushes use `--force-with-lease`
+- common repo tasks are wrapped in one CLI
+- works consistently across major operating systems
+- designed for scripting and automation
 
 ## Features
 
 - Safe default behavior for Git operations
 - `--force-with-lease` instead of bare force pushes
 - Push, sync, remote branch, tag, PR, and release helpers
-- Cross-platform CLI surface (`shipgo.sh`, `shipgo.ps1`, `shipgo.bat`)
-- Scriptable commands suitable for automation and agent workflows
+- Cross-platform CLI surface: `shipgo.sh`, `shipgo.ps1`, `shipgo.bat`
+- Scriptable commands for automation and agent workflows
+- Clean developer experience with minimal friction
 
 ## Installation
 
@@ -25,7 +43,7 @@ curl -fsSL https://raw.githubusercontent.com/reyanshraw/shipgo/main/shipgo.sh -o
 chmod +x /usr/local/bin/shipgo
 ```
 
-Or from a cloned checkout:
+Or install from a local clone:
 
 ```bash
 git clone https://github.com/reyanshraw/shipgo.git
@@ -72,7 +90,7 @@ shipgo pr "Add dark mode"
 
 See the full command reference in [docs/commands.md](docs/commands.md).
 
-Core examples:
+Common examples:
 
 ```bash
 shipgo push
@@ -89,9 +107,49 @@ shipgo pr "Add dark mode"
 shipgo help
 ```
 
+## Typical workflows
+
+### Check repository status
+
+```bash
+shipgo status
+```
+
+### Push current branch safely
+
+```bash
+shipgo push
+```
+
+### Sync and update your branch
+
+```bash
+shipgo up
+shipgo sync
+```
+
+### Create a tag
+
+```bash
+shipgo tag v1.2.0
+shipgo tag v1.2.0 "Release v1.2.0"
+```
+
+### Create a release
+
+```bash
+shipgo release v1.2.0
+```
+
+### Open a pull request
+
+```bash
+shipgo pr "Add dark mode"
+```
+
 ## Configuration
 
-Shipgo reads a config file from `~/.shipgorc` unless `SHIPGO_CONFIG` is set.
+Shipgo reads configuration from `~/.shipgorc` unless `SHIPGO_CONFIG` is set.
 
 Example:
 
@@ -101,11 +159,13 @@ PROTECTED_BRANCHES="main master develop"
 CONFIRM_FORCE=true
 ```
 
+You can override behavior for a single command:
+
 ```bash
 SHIPGO_YES=1 shipgo force
 ```
 
-See [docs/configuration.md](docs/configuration.md) for details.
+See [docs/configuration.md](docs/configuration.md) for more details.
 
 ## Documentation
 
@@ -115,6 +175,8 @@ See [docs/configuration.md](docs/configuration.md) for details.
 - [AGENTS.md](AGENTS.md)
 
 ## Development
+
+Run linting and tests:
 
 ```bash
 make lint
@@ -130,13 +192,21 @@ bash scripts/lint.sh
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before contributing.
+Contributions are welcome. Please read:
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
 ## Security
 
-- Shipgo avoids bare `--force`; it prefers `--force-with-lease`.
-- Protected branches are checked against `main`, `master`, and `develop` by default.
-- Never commit credentials or secrets.
+Shipgo is built with safer Git defaults:
+
+- avoids bare `--force`
+- prefers `--force-with-lease`
+- checks protected branches like `main`, `master`, and `develop`
+- encourages safe automation and human review
+
+Never commit credentials or secrets.
 
 ## License
 
