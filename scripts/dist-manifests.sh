@@ -1,9 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
-VERSION="$1"
-SUMS="$2"
-OUT="$3"
-mkdir -p "$OUT/homebrew" "$OUT/scoop"
-sed -e "s|@VERSION@|$VERSION|g" scripts/homebrew/shipgo.rb.tmpl  > "$OUT/homebrew/shipgo.rb"
-sed -e "s|@VERSION@|$VERSION|g" scripts/scoop/shipgo.json.tmpl > "$OUT/scoop/shipgo.json"
-echo "Rendered manifests for $VERSION into $OUT"
+
+DIR="${1:-}"
+SUMS="${2:-}"
+
+if [ -z "$DIR" ] || [ -z "$SUMS" ]; then
+  echo "Error: Missing arguments." >&2
+  echo "Usage: $0 <source_directory> <output_checksum_file>" >&2
+  exit 1
+fi
+
+if [ ! -d "$DIR" ]; then
+  echo "Error: Directory '$DIR' does not exist." >&2
+  exit 1
+fi
+
+echo "Generating manifest for files in $DIR..."
+
+cd "$DIR"
+
+find . -type f ! -name "$(basename "$SUMS")" -print0 | sort -z | xargs -0 sha256sum > "$SUMS"
+
+echo "Manifest successfully written to $DIR/$SUMS"
