@@ -2,7 +2,7 @@
 
 ## Reporting
 
-Email security@ORG.dev — do not open a public issue.
+Email 07reyanash@proton.me — do not open a public issue.
 
 ## Scope
 
