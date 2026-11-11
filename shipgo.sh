@@ -13,6 +13,7 @@ else RST=; B=; D=; R=; G=; Y=; C=; fi
 DEFAULT_REMOTE="origin"
 PROTECTED_BRANCHES="main master develop"
 CONFIRM_FORCE=true
+# shellcheck source=/dev/null
 [ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE"
 
 info(){ printf '%s %s\n' "${C}[*]${RST}" "$*"; }
@@ -113,15 +114,15 @@ cmd_tag_list(){ need_repo; git tag --sort=-v:refname | head -50; }
 cmd_tag_del(){ need_repo; local n="${1:-}"; [ -z "$n" ] && die "Usage: shipgo tag-del <name>"
   confirm "Delete tag '$n' local+remote?"||return
   git tag -d "$n" 2>/dev/null||warn "Local tag missing"
-  git push origin ":refs/tags/$n" 2>/dev/null && ok "Remote deleted" || warn "Remote missing"
+  if git push origin ":refs/tags/$n" 2>/dev/null; then ok "Remote deleted"; else warn "Remote missing"; fi
 }
 cmd_release(){ cmd_tag "$@"; }
 cmd_pr(){ need_repo; command -v gh >/dev/null||die "gh not installed"; cmd_push; local t="${1:-}"
-  [ -n "$t" ] && gh pr create --title "$t" --body "" --web || gh pr create --fill --web; }
+  if [ -n "$t" ]; then gh pr create --title "$t" --body "" --web; else gh pr create --fill --web; fi; }
 cmd_draft_pr(){ need_repo; command -v gh >/dev/null||die "gh not installed"; cmd_push; local t="${1:-}"
-  [ -n "$t" ] && gh pr create --draft --title "$t" --body "" --web || gh pr create --draft --fill --web; }
+  if [ -n "$t" ]; then gh pr create --draft --title "$t" --body "" --web; else gh pr create --draft --fill --web; fi; }
 cmd_mr(){ need_repo; command -v glab >/dev/null||die "glab not installed"; cmd_push; local t="${1:-}"
-  [ -n "$t" ] && glab mr create --title "$t" --web || glab mr create --fill --web; }
+  if [ -n "$t" ]; then glab mr create --title "$t" --web; else glab mr create --fill --web; fi; }
 cmd_info(){ need_repo; title Remotes; git remote -v; echo; title Branches; git branch -vv; echo; title Status; git status -sb; }
 cmd_log(){ need_repo; git log --oneline --graph --decorate -n "${1:-15}"; }
 cmd_branches(){ need_repo; title Local; git branch -vv; title Remote; git branch -r; }
@@ -143,7 +144,7 @@ cmd_doctor(){ title "Health"
   }
 }
 cmd_ping(){ need_repo; local u; u=$(git remote get-url origin 2>/dev/null)||die "No origin."
-  info "Testing $u"; git ls-remote --heads "$u" >/dev/null 2>&1 && ok Reachable || warn Unreachable; }
+  info "Testing $u"; if git ls-remote --heads "$u" >/dev/null 2>&1; then ok Reachable; else warn Unreachable; fi; }
 cmd_open(){ need_repo; local u; u=$(web_url)||die "No origin."; open_url "$u"; }
 cmd_compare(){ need_repo; local base="${1:-main}" u br; u=$(web_url)||die "No origin."; br=$(branch)
   open_url "$u/compare/$base...$br?expand=1"; }
@@ -172,10 +173,10 @@ cmd_wip(){ need_repo; info "WIP commit"
 }
 cmd_stash(){ need_repo; git stash push -u -m "shipgo $(date +%s)"; ok Stashed.; }
 cmd_stash_pop(){ need_repo; git stash pop; ok Popped.; }
-cmd_init(){ local d="${1:-.}"; mkdir -p "$d" && cd "$d"||die "Cannot create $d"
+cmd_init(){ local d="${1:-.}"; mkdir -p "$d" || die "Cannot create $d"; cd "$d" || die "Cannot create $d"
   git init -b main >/dev/null; git commit --allow-empty -m "Initial commit" >/dev/null; ok "Init in $d"; }
 cmd_clone(){ local u="${1:-}" d="${2:-}"; [ -z "$u" ] && die "Usage: shipgo clone <url> [dir]"
-  [ -n "$d" ] && git clone "$u" "$d" || git clone "$u"; ok Cloned.; }
+  if [ -n "$d" ]; then git clone "$u" "$d"; else git clone "$u"; fi; ok Cloned.; }
 
 menu(){ while true; do clear 2>/dev/null||true
   local b; b=$(branch)
